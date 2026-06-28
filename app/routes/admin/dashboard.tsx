@@ -1,9 +1,16 @@
 import {Header, StatsCard, TripCard} from "../../../components"
 import {dashboardStats, user, allTrips} from "~/constants";
+import {getUser} from "~/appwrite/auth";
+import type {Route} from "./+types/dashboard";
+import * as Sentry from "@sentry/react-router";
+
 
 const {totalUsers, usersJoined, totalTrips, tripsCreated, userRole} = dashboardStats;
+export const clientLoader = async () => await getUser()
 
-const Dashboard = () => {
+
+const Dashboard = ({ loaderData }: Route.ComponentProps) => {
+    const user = loaderData as User | null;
 
 
     return (
@@ -32,7 +39,7 @@ const Dashboard = () => {
                         lastMonthCount={dashboardStats.userRole.lastMonth}
                     />
                 </div>
-            </ section>
+            </section>
             <section className="container">
                 <h1 className="text-xl font-semibold text-dark-100">Created Trips</h1>
                 <div className='trip-grid'>

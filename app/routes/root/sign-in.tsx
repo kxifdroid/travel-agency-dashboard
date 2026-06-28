@@ -1,5 +1,5 @@
 
-import {Link, redirect} from "react-router";
+import {Link, redirect, useSearchParams} from "react-router";
 import {ButtonComponent} from "@syncfusion/ej2-react-buttons";
 import {loginWithGoogle} from "~/appwrite/auth";
 import {account} from "~/appwrite/client";
@@ -9,11 +9,14 @@ export async function clientLoader() {
         const user = await account.get();
 
         if(user.$id) return redirect('/');
+
     } catch (e) {
         console.log('Error fetching user', e)
     }
 }
 const SignIn = () => {
+    const [searchParams] = useSearchParams();
+    const isUnauthorized = searchParams.get("error") === "unauthorized";
 
     return (
         <main className="auth">
@@ -34,6 +37,16 @@ const SignIn = () => {
 
                         <p className="p-18-regular text-center text-gray-100 !leading-7">Sign in with Google to manage destinations, itineraries, and user activity with ease.</p>
                     </article>
+
+                    {isUnauthorized && (
+                        <div className="mb-6 p-4 rounded-xl border border-red-100 bg-red-50 text-center flex flex-col gap-1.5 shadow-400">
+                            <span className="font-bold text-red-500 text-sm">Access Denied</span>
+                            <span className="text-gray-700 text-xs leading-relaxed">
+                                Your account is not authorized to access this dashboard. Please request your administrator to set your status to <strong>admin</strong> in the Appwrite database.
+                            </span>
+                        </div>
+                    )}
+
                     <ButtonComponent
                         type="button"
                         iconCss="e-search-icon"

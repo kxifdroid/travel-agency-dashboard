@@ -21,6 +21,9 @@ export const storeUserData = async () => {
         const user = await account.get();
         if (!user) throw new Error("User not found");
 
+        const existing = await getExistingUser(user.$id);
+        if (existing) return existing;
+
         const { providerAccessToken } = (await account.getSession("current")) || {};
         const profilePicture = providerAccessToken
             ? await getGooglePicture(providerAccessToken)
@@ -39,7 +42,8 @@ export const storeUserData = async () => {
             }
         );
 
-        if (!createdUser.$id) redirect("/sign-in");
+        if (!createdUser.$id) return redirect("/sign-in");
+        return createdUser;
     } catch (error) {
         console.error("Error storing user data:", error);
     }
@@ -63,13 +67,13 @@ export const getGooglePicture = async (accessToken: string) => {
 
 export const loginWithGoogle = async () => {
     try {
-        account.createOAuth2Session(
+        account.createOAuth2Token(
             OAuthProvider.Google,
-            `${window.location.origin}/`,
-            `${window.location.origin}/404`
+            `${window.location.origin}/auth-callback`,
+            `${window.location.origin}/sign-in`
         );
     } catch (error) {
-        console.error("Error during OAuth2 session creation:", error);
+        console.error("Error during OAuth2 token creation:", error);
     }
 };
 
@@ -101,3 +105,19 @@ export const getUser = async () => {
         return null;
     }
 };
+
+export const getAllUsers = async (limit:number, offset:number) => {
+    try {
+        const {documents: users, total} = await database.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.userCollectionId,
+            [Query.limit(limit), Query.offset(offset)]
+        );
+
+        if(total === 0) return {users: [], total}
+        return {users, total}
+    }catch (error) {
+        console.error("Error during getAllUsers:", error);
+        return {users :[], total :0}
+    }
+}
